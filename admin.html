@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>修仙模拟器 · 管理面板</title>
+<link rel="stylesheet" href="lib/remixicon/remixicon.css">
+<link rel="stylesheet" href="lib/animate/animate.min.css">
+<link href="lib/fonts/google-fonts.css" rel="stylesheet">
+<style>
+:root{
+  --ink-black:#0a0a0f;--ink-dark:#13131a;--ink-panel:#1a1a24;--ink-light:#22222e;
+  --gold:#c9a227;--gold-bright:#e8c84a;--gold-dim:#8a7020;
+  --cinnabar:#c23a2b;--cinnabar-bright:#e84a3a;
+  --jade:#4a8c7a;--jade-bright:#5bb89e;
+  --purple:#8b5cf6;--purple-bright:#a78bfa;
+  --ice-blue:#6bb6ff;
+  --text-main:#e8e4dc;--text-dim:#9a9690;--text-gold:#c9a227;
+  --border-gold:rgba(201,162,39,0.4);--border-dim:rgba(201,162,39,0.12);
+  --font-serif:"Noto Serif SC",serif;
+  --shadow-gold:0 0 15px rgba(201,162,39,0.3);
+  --danger:#e84a3a;--success:#5bb89e;
+  --sidebar-w:220px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--ink-black);color:var(--text-main);font-family:var(--font-serif);user-select:none;overflow:hidden}
+
+/* ===== Layout Shell ===== */
+.app-shell{display:flex;height:100vh}
+
+/* ===== Sidebar ===== */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--ink-dark);border-right:1px solid var(--border-dim);display:flex;flex-direction:column;height:100vh;overflow-y:auto;z-index:200;transition:transform 0.3s}
+.sidebar-brand{padding:1.2rem 1rem;text-align:center;border-bottom:1px solid var(--border-dim)}
+.sidebar-brand .brand-icon{font-size:1.8rem;color:var(--gold);text-shadow:var(--shadow-gold)}
+.sidebar-brand h1{font-size:0.95rem;color:var(--gold);margin-top:0.3rem;letter-spacing:1px}
+.sidebar-brand p{font-size:0.65rem;color:var(--text-dim);margin-top:0.2rem}
+
+/* Nav */
+.nav-section{padding:0.6rem 0;flex:1}
+.nav-section .nav-label{font-size:0.6rem;color:var(--text-dim);padding:0.4rem 1.2rem;letter-spacing:1px;text-transform:uppercase}
+.tab-btn{display:flex;align-items:center;gap:0.7rem;padding:0.6rem 1.2rem;cursor:pointer;color:var(--text-dim);font-size:0.82rem;font-family:var(--font-serif);transition:all 0.2s;border-left:3px solid transparent;position:relative}
+.tab-btn:hover{background:var(--ink-panel);color:var(--text-main)}
+.tab-btn i{font-size:1.1rem;width:20px;text-align:center}
+.tab-btn.active{background:rgba(201,162,39,0.08);color:var(--gold);border-left-color:var(--gold)}
+.tab-btn.active::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--gold);border-radius:2px;box-shadow:var(--shadow-gold)}
+
+/* Sidebar Footer Actions */
+.sidebar-footer{border-top:1px solid var(--border-dim);padding:0.6rem}
+.sidebar-footer .btn{width:100%;justify-content:flex-start;margin-bottom:0.35rem;padding:0.5rem 0.8rem;font-size:0.75rem}
+.sidebar-footer .btn:last-child{margin-bottom:0}
+
+/* ===== Main Area ===== */
+.main-area{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* Top Bar */
+.top-bar{display:flex;align-items:center;gap:0.8rem;padding:0.6rem 1.2rem;background:var(--ink-dark);border-bottom:1px solid var(--border-dim);flex-shrink:0;min-height:52px}
+.top-bar .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.top-bar .status-dot.online{background:var(--success);box-shadow:0 0 8px var(--success)}
+.top-bar .status-dot.offline{background:var(--danger);box-shadow:0 0 8px var(--danger)}
+.top-bar .status-text{font-size:0.78rem;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-bar .status-text strong{color:var(--text-main)}
+.top-bar .mobile-menu-btn{display:none;background:none;border:none;color:var(--gold);font-size:1.4rem;cursor:pointer;padding:0.2rem}
+
+/* Dirty badge */
+.dirty-badge{display:none;font-size:0.62rem;padding:2px 8px;border-radius:3px;background:rgba(232,74,58,0.2);color:var(--danger);border:1px solid var(--danger);animation:pulse 1.5s infinite;white-space:nowrap}
+.dirty-badge.show{display:inline-block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+/* Quick actions in topbar */
+.topbar-actions{display:flex;gap:0.35rem;flex-shrink:0}
+.topbar-actions .btn{padding:0.3rem 0.7rem;font-size:0.72rem}
+
+/* Content Area */
+.content-area{flex:1;overflow-y:auto;padding:1rem 1.2rem}
+
+/* ===== Panel ===== */
+.panel{display:none;animation:fadeIn 0.3s}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== Card ===== */
+.card{background:var(--ink-panel);border:1px solid var(--border-dim);border-radius:10px;padding:1rem;margin-bottom:0.8rem}
+.card-title{font-size:0.88rem;color:var(--gold);margin-bottom:0.7rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border-dim);display:flex;align-items:center;gap:0.4rem}
+
+/* ===== Form ===== */
+.form-row{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;flex-wrap:wrap}
+.form-label{font-size:0.75rem;color:var(--text-dim);min-width:70px;text-align:right;flex-shrink:0}
+.form-input{background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:6px;padding:0.38rem 0.6rem;color:var(--text-main);font-size:0.8rem;font-family:var(--font-serif);width:130px;transition:border-color 0.2s}
+.form-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,162,39,0.1)}
+.form-input.wide{width:100%}
+.form-select{background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:6px;padding:0.38rem 0.6rem;color:var(--text-main);font-size:0.8rem;font-family:var(--font-serif);cursor:pointer;max-width:200px}
+.form-select:focus{outline:none;border-color:var(--gold)}
+.form-select option{background:var(--ink-dark)}
+.form-hint{font-size:0.65rem;color:var(--text-dim);margin-left:0.3rem}
+
+/* ===== Buttons ===== */
+.btn{padding:0.38rem 0.9rem;background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:6px;cursor:pointer;color:var(--text-main);font-size:0.78rem;font-family:var(--font-serif);transition:all 0.2s;display:inline-flex;align-items:center;gap:0.3rem;white-space:nowrap}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn-gold{background:rgba(201,162,39,0.15);border-color:var(--gold);color:var(--gold)}
+.btn-gold:hover{background:rgba(201,162,39,0.25)}
+.btn-danger{border-color:var(--danger);color:var(--danger)}
+.btn-danger:hover{background:rgba(232,74,58,0.15)}
+.btn-success{border-color:var(--success);color:var(--success)}
+.btn-success:hover{background:rgba(91,184,158,0.15)}
+.btn-sm{padding:0.25rem 0.6rem;font-size:0.7rem}
+
+/* ===== Grid ===== */
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0.5rem}
+.item-card{background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:8px;padding:0.5rem 0.7rem;display:flex;align-items:center;gap:0.5rem;transition:all 0.2s}
+.item-card:hover{border-color:var(--border-gold);background:var(--ink-light)}
+.item-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:0.78rem;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-desc{font-size:0.65rem;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-action{display:flex;gap:0.25rem;flex-shrink:0}
+
+/* Grade colors */
+.grade-common{color:#999}.grade-uncommon{color:var(--jade-bright)}.grade-rare{color:#4a7ac8}
+.grade-epic{color:#9a4ac8}.grade-legend{color:var(--gold)}.grade-myth{color:#e040fb}
+.grade-bg-common{background:rgba(153,153,153,0.15)}.grade-bg-uncommon{background:rgba(91,184,158,0.15)}
+.grade-bg-rare{background:rgba(74,122,200,0.15)}.grade-bg-epic{background:rgba(154,74,200,0.15)}
+.grade-bg-legend{background:rgba(201,162,39,0.15)}.grade-bg-myth{background:rgba(224,64,251,0.15)}
+
+/* ===== Search ===== */
+.search-box{width:100%;background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:6px;padding:0.45rem 0.8rem;color:var(--text-main);font-size:0.78rem;font-family:var(--font-serif);margin-bottom:0.6rem}
+.search-box:focus{outline:none;border-color:var(--gold)}
+
+/* Filter chips */
+.filter-chips{display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.6rem}
+.chip{padding:0.22rem 0.65rem;background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:20px;font-size:0.68rem;color:var(--text-dim);cursor:pointer;transition:all 0.2s}
+.chip:hover{border-color:var(--gold);color:var(--gold)}
+.chip.active{border-color:var(--gold);background:rgba(201,162,39,0.15);color:var(--gold)}
+
+/* ===== JSON view ===== */
+.json-view{background:var(--ink-black);border:1px solid var(--border-dim);border-radius:8px;padding:0.8rem;font-size:0.7rem;color:var(--jade-bright);font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:450px;overflow-y:auto;line-height:1.5}
+
+/* ===== Toast ===== */
+#toastContainer{position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:0.4rem}
+.toast{background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:8px;padding:0.55rem 0.9rem;color:var(--text-main);font-size:0.78rem;box-shadow:0 4px 20px rgba(0,0,0,0.4);animation:slideIn 0.3s;display:flex;align-items:center;gap:0.4rem;max-width:360px}
+.toast.success{border-color:var(--success)}.toast.success i{color:var(--success)}
+.toast.warning{border-color:var(--danger)}.toast.warning i{color:var(--danger)}
+.toast.info{border-color:var(--ice-blue)}.toast.info i{color:var(--ice-blue)}
+@keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+
+/* ===== Inventory list ===== */
+.inv-list-item{display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0.5rem;background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:6px;margin-bottom:0.3rem;cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.inv-list-item:hover{border-color:var(--border-gold)}
+.inv-list-item.editing{border-color:var(--gold);background:var(--ink-light);box-shadow:0 0 0 1px var(--gold)}
+.inv-list-item .item-count{font-size:0.78rem;color:var(--gold-bright);font-weight:700;min-width:36px;text-align:right}
+.item-edit-input{width:64px;text-align:center;font-size:0.78rem;color:var(--gold-bright);font-weight:700;background:var(--ink-black);border:1px solid var(--gold);border-radius:4px;padding:0.2rem 0.3rem}
+.item-edit-input:focus{outline:none;box-shadow:0 0 6px rgba(201,162,39,0.3)}
+.edit-hint{font-size:0.58rem;color:var(--text-dim);margin-top:0.15rem;display:flex;align-items:center;gap:0.2rem}
+
+/* ===== Stats display ===== */
+.stat-display{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:0.5rem}
+.stat-box{text-align:center;padding:0.6rem 0.5rem;background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:8px}
+.stat-box .stat-val{font-size:1.15rem;color:var(--gold);font-weight:700;line-height:1.2}
+.stat-box .stat-label{font-size:0.65rem;color:var(--text-dim);margin-top:0.15rem}
+
+/* ===== Gongfa card ===== */
+.gongfa-card{background:var(--ink-dark);border:1px solid var(--border-dim);border-radius:8px;padding:0.7rem;margin-bottom:0.5rem}
+.gongfa-card .gf-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem;gap:0.5rem}
+.gongfa-card .gf-name{font-size:0.82rem;font-weight:700}
+.gongfa-card .gf-meta{font-size:0.68rem;color:var(--text-dim);display:flex;gap:0.6rem;flex-wrap:wrap}
+.gongfa-card .gf-desc{font-size:0.7rem;color:var(--text-dim);margin-top:0.25rem;line-height:1.4}
+
+/* Owned badge */
+.owned-badge{font-size:0.58rem;padding:1px 6px;border-radius:3px;background:rgba(91,184,158,0.2);color:var(--success);border:1px solid var(--success)}
+
+/* Info hint card */
+.hint-card{text-align:center;color:var(--text-dim);font-size:0.72rem;padding:0.5rem;background:rgba(201,162,39,0.05);border:1px dashed var(--border-dim);border-radius:8px}
+
+/* ===== Diff styles ===== */
+.diff-row{display:flex;gap:0.5rem;padding:0.3rem 0.5rem;border-radius:4px;margin-bottom:0.2rem;font-size:0.73rem;font-family:monospace;align-items:center}
+.diff-add{background:rgba(91,184,158,0.1);border-left:3px solid var(--success)}
+.diff-del{background:rgba(232,74,58,0.1);border-left:3px solid var(--danger)}
+.diff-mod{background:rgba(201,162,39,0.1);border-left:3px solid var(--gold)}
+.diff-key{color:var(--text-dim);min-width:110px;flex-shrink:0}
+.diff-old{color:var(--danger);text-decoration:line-through;opacity:0.7}
+.diff-arrow{color:var(--text-dim)}
+.diff-new{color:var(--success)}
+.diff-none{text-align:center;color:var(--text-dim);padding:1rem;font-size:0.82rem}
+
+/* ===== Modal ===== */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;justify-content:center;align-items:center;backdrop-filter:blur(2px)}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--ink-panel);border:1px solid var(--border-gold);border-radius:12px;padding:1.5rem;max-width:700px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.6)}
+
+/* ===== Mobile ===== */
+.sidebar-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:150}
+.sidebar-overlay.show{display:block}
+
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);box-shadow:4px 0 20px rgba(0,0,0,0.5)}
+  .sidebar.open{transform:translateX(0)}
+  .top-bar .mobile-menu-btn{display:block}
+  .topbar-actions .btn-label{display:none}
+  .topbar-actions .btn{padding:0.3rem 0.5rem}
+  .content-area{padding:0.6rem}
+  .form-input{width:100px}
+  .form-label{min-width:60px;font-size:0.7rem}
+  .item-grid{grid-template-columns:1fr}
+  .stat-display{grid-template-columns:repeat(3,1fr)}
+  .sidebar-footer .btn{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="ri-shield-keyhole-line"></i></div>
+    <h1>管理面板</h1>
+    <p>修仙模拟器 · 存档编辑器</p>
+  </div>
+
+  <nav class="nav-section">
+    <div class="nav-label">数据管理</div>
+    <div class="tab-btn active" data-tab="player"><i class="ri-user-settings-line"></i>角色属性</div>
+    <div class="tab-btn" data-tab="items"><i class="ri-treasure-map-line"></i>物品管理</div>
+    <div class="tab-btn" data-tab="gongfa"><i class="ri-book-marked-line"></i>功法管理</div>
+    <div class="tab-btn" data-tab="sect"><i class="ri-building-2-line"></i>宗门数据</div>
+    <div class="nav-label" style="margin-top:0.6rem">高级</div>
+    <div class="tab-btn" data-tab="raw"><i class="ri-code-s-slash-line"></i>原始数据</div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn" onclick="reloadSave()"><i class="ri-refresh-line"></i> 重新读取存档</button>
+    <button class="btn" onclick="discardChanges()"><i class="ri-arrow-go-back-line"></i> 放弃修改</button>
+    <button class="btn btn-success" onclick="showCommitPreview()"><i class="ri-eye-line"></i> 预览变更</button>
+    <button class="btn btn-gold" onclick="commitChanges()"><i class="ri-save-line"></i> 应用修改到存档</button>
+    <a href="index.html" class="btn" onclick="return goBackToGame()"><i class="ri-game-line"></i> 返回游戏</a>
+  </div>
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- ===== Main Area ===== -->
+<div class="main-area">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="ri-menu-line"></i></button>
+    <div class="status-dot offline" id="statusDot"></div>
+    <div class="status-text" id="statusText">未读取存档</div>
+    <span class="dirty-badge" id="dirtyBadge">有未保存的修改</span>
+    <div class="topbar-actions">
+      <button class="btn btn-success" onclick="showCommitPreview()"><i class="ri-eye-line"></i><span class="btn-label"> 预览</span></button>
+      <button class="btn btn-gold" onclick="commitChanges()"><i class="ri-save-line"></i><span class="btn-label"> 保存</span></button>
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div class="content-area">
+
+<!-- Panel: Player -->
+<div class="panel active" id="panel-player">
+  <div class="card">
+    <div class="card-title"><i class="ri-information-line"></i>当前状态</div>
+    <div class="stat-display" id="statDisplay"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ri-user-line"></i>基础信息</div>
+    <div class="form-row">
+      <label class="form-label">道号</label>
+      <input type="text" class="form-input" id="editName" style="width:200px">
+    </div>
+    <div class="form-row">
+      <label class="form-label">灵根</label>
+      <select class="form-select" id="editRoot">
+        <option value="0">天灵根</option>
+        <option value="1">异灵根</option>
+        <option value="2">双灵根</option>
+        <option value="3">三灵根</option>
+        <option value="4">四灵根</option>
+        <option value="5">五灵根</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">境界</label>
+      <select class="form-select" id="editRealm"></select>
+      <label class="form-label" style="min-width:40px">阶段</label>
+      <select class="form-select" id="editSubStage"></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">年龄</label>
+      <input type="number" class="form-input" id="editAge" min="1">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ri-heart-pulse-line"></i>生命灵力</div>
+    <div class="form-row">
+      <label class="form-label">当前气血</label>
+      <input type="number" class="form-input" id="editHp" min="0">
+      <label class="form-label" style="min-width:60px">最大气血</label>
+      <input type="number" class="form-input" id="editMaxHp" min="1">
+    </div>
+    <div class="form-row">
+      <label class="form-label">当前灵力</label>
+      <input type="number" class="form-input" id="editMp" min="0">
+      <label class="form-label" style="min-width:60px">最大灵力</label>
+      <input type="number" class="form-input" id="editMaxMp" min="1">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ri-coin-line"></i>资源修为</div>
+    <div class="form-row">
+      <label class="form-label">灵石</label>
+      <input type="number" class="form-input" id="editStones" min="0">
+      <span class="form-hint">直接修改数量</span>
+    </div>
+    <div class="form-row">
+      <label class="form-label">当前寿命</label>
+      <input type="number" class="form-input" id="editLifespan" min="0">
+      <label class="form-label" style="min-width:60px">最大寿命</label>
+      <input type="number" class="form-input" id="editMaxLifespan" min="1">
+    </div>
+    <div class="form-row">
+      <label class="form-label">修为</label>
+      <input type="number" class="form-input" id="editCultivation" min="0">
+      <span class="form-hint">当前境界修炼进度</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ri-shield-star-line"></i>属性</div>
+    <div class="form-row">
+      <label class="form-label">基础攻击</label>
+      <input type="number" class="form-input" id="editAtk" min="0">
+      <label class="form-label" style="min-width:60px">基础防御</label>
+      <input type="number" class="form-input" id="editDef" min="0">
+    </div>
+    <div class="form-row">
+      <label class="form-label">基础速度</label>
+      <input type="number" class="form-input" id="editSpd" min="0">
+    </div>
+    <div class="form-row">
+      <label class="form-label">悟性</label>
+      <input type="number" class="form-input" id="editComp" min="0" max="100">
+      <label class="form-label" style="min-width:60px">心境</label>
+      <input type="number" class="form-input" id="editMind" min="0" max="100">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ri-equipment-line"></i>装备</div>
+    <div class="form-row">
+      <label class="form-label">武器</label>
+      <select class="form-select" id="editWeapon" style="width:180px"><option value="">无</option></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">防具</label>
+      <select class="form-select" id="editArmor" style="width:180px"><option value="">无</option></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">饰品</label>
+      <select class="form-select" id="editAccessory" style="width:180px"><option value="">无</option></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">修炼功法</label>
+      <select class="form-select" id="editTech" style="width:180px"></select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ri-bar-chart-line"></i>统计数据</div>
+    <div class="form-row">
+      <label class="form-label">击杀妖兽</label>
+      <input type="number" class="form-input" id="editStatKill" min="0">
+      <label class="form-label" style="min-width:60px">探索次数</label>
+      <input type="number" class="form-input" id="editStatExplore" min="0">
+    </div>
+    <div class="form-row">
+      <label class="form-label">炼丹次数</label>
+      <input type="number" class="form-input" id="editStatPill" min="0">
+      <label class="form-label" style="min-width:60px">炼器次数</label>
+      <input type="number" class="form-input" id="editStatForge" min="0">
+    </div>
+    <div class="form-row">
+      <label class="form-label">画符次数</label>
+      <input type="number" class="form-input" id="editStatTalisman" min="0">
+      <label class="form-label" style="min-width:60px">布阵次数</label>
+      <input type="number" class="form-input" id="editStatFormation" min="0">
+    </div>
+    <div class="form-row">
+      <label class="form-label">悟道次数</label>
+      <input type="number" class="form-input" id="editStatDao" min="0">
+      <label class="form-label" style="min-width:60px">突破次数</label>
+      <input type="number" class="form-input" id="editStatBreak" min="0">
+    </div>
+  </div>
+
+  <div class="hint-card"><i class="ri-information-line"></i> 表单修改已自动同步到工作区，请点击"应用修改到存档"保存</div>
+</div>
+
+<!-- Panel: Items -->
+<div class="panel" id="panel-items">
+  <div class="card">
+    <div class="card-title"><i class="ri-treasure-map-line"></i>当前背包</div>
+    <div id="invList"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ri-add-circle-line"></i>添加物品</div>
+    <input type="text" class="search-box" id="itemSearch" placeholder="搜索物品名称..." oninput="renderItemGrid()">
+    <div class="filter-chips" id="itemFilters"></div>
+    <div class="item-grid" id="itemGrid"></div>
+  </div>
+  <div class="hint-card"><i class="ri-information-line"></i> 物品修改已自动同步到工作区，请点击"应用修改到存档"保存</div>
+</div>
+
+<!-- Panel: Gongfa -->
+<div class="panel" id="panel-gongfa">
+  <div class="card">
+    <div class="card-title"><i class="ri-book-marked-line"></i>已获得功法</div>
+    <div id="ownedGongfa"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ri-add-circle-line"></i>未获得功法（点击"获得"添加到已获得）</div>
+    <input type="text" class="search-box" id="gongfaSearch" placeholder="搜索功法名称/小说/属性..." oninput="renderGongfaList()">
+    <div class="filter-chips" id="gongfaFilters"></div>
+    <div id="gongfaList"></div>
+  </div>
+  <div class="hint-card"><i class="ri-information-line"></i> 功法修改已自动同步到工作区，请点击"应用修改到存档"保存</div>
+</div>
+
+<!-- Panel: Sect -->
+<div class="panel" id="panel-sect">
+  <div class="card">
+    <div class="card-title"><i class="ri-building-2-line"></i>宗门信息</div>
+    <div class="form-row">
+      <label class="form-label">所属宗门</label>
+      <select class="form-select" id="editSectId" style="width:200px"><option value="">无宗门</option></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">宗门贡献</label>
+      <input type="number" class="form-input" id="editSectContrib" min="0">
+    </div>
+    <div class="form-row">
+      <label class="form-label">已完成任务</label>
+      <input type="text" class="form-input" id="editSectTasks" style="width:300px" placeholder="任务ID数组，如 task_hf1,task_hf2">
+    </div>
+  </div>
+  <div class="hint-card"><i class="ri-information-line"></i> 宗门修改已自动同步到工作区，请点击"应用修改到存档"保存</div>
+</div>
+
+<!-- Panel: Raw JSON -->
+<div class="panel" id="panel-raw">
+  <div class="card">
+    <div class="card-title"><i class="ri-code-s-slash-line"></i>存档原始JSON</div>
+    <div class="form-row">
+      <button class="btn btn-sm" onclick="exportSave()"><i class="ri-download-line"></i> 导出存档</button>
+      <button class="btn btn-sm" onclick="document.getElementById('importFile').click()"><i class="ri-upload-line"></i> 导入存档</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importSave(event)">
+      <button class="btn btn-sm btn-danger" onclick="deleteSave()"><i class="ri-delete-bin-line"></i> 删除存档</button>
+    </div>
+    <div class="json-view" id="jsonView">未读取存档</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ri-edit-line"></i>直接编辑JSON</div>
+    <textarea class="json-view" id="jsonEditor" style="min-height:200px;font-family:monospace;white-space:pre-wrap;word-break:break-all" placeholder="粘贴JSON存档数据后点击下方保存..."></textarea>
+    <div style="margin-top:0.6rem;display:flex;gap:0.5rem">
+      <button class="btn btn-gold" onclick="applyJsonEdit()"><i class="ri-check-line"></i> 应用JSON修改</button>
+      <button class="btn" onclick="loadJsonToEditor()"><i class="ri-refresh-line"></i> 从存档重新加载</button>
+    </div>
+  </div>
+</div>
+
+  </div><!-- /content-area -->
+</div><!-- /main-area -->
+
+</div><!-- /app-shell -->
+
+<!-- Commit Preview Modal -->
+<div class="modal-overlay" id="commitModal">
+  <div class="modal-box">
+    <div class="card-title" style="font-size:1.05rem"><i class="ri-diff-line"></i> 变更预览</div>
+    <div id="diffContent" style="margin:0.5rem 0 1rem"></div>
+    <div style="display:flex;gap:0.5rem;justify-content:center">
+      <button class="btn btn-danger" onclick="closeCommitModal()">取消</button>
+      <button class="btn btn-gold" onclick="confirmCommit()"><i class="ri-check-line"></i> 确认应用修改</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script src="gongfa-data.js"></script>
+<script src="sect-data.js"></script>
+<script>
+// ==================== 数据定义（从游戏复制） ====================
+const REALMS=[
+  {name:'炼气',subStages:['一层','二层','三层','四层','五层','六层','七层','八层','九层','十层','十一层','十二层','十三层'],cultNeed:100,lifespan:80},
+  {name:'筑基',subStages:['初期','中期','后期','大圆满'],cultNeed:500,lifespan:200},
+  {name:'金丹',subStages:['初期','中期','后期','大圆满'],cultNeed:2000,lifespan:500},
+  {name:'元婴',subStages:['初期','中期','后期','大圆满'],cultNeed:8000,lifespan:1000},
+  {name:'化神',subStages:['初期','中期','后期','大圆满'],cultNeed:30000,lifespan:2000},
+  {name:'炼虚',subStages:['初期','中期','后期','大圆满'],cultNeed:100000,lifespan:5000},
+  {name:'合体',subStages:['初期','中期','后期','大圆满'],cultNeed:500000,lifespan:10000},
+  {name:'大乘',subStages:['初期','中期','后期','大圆满'],cultNeed:2000000,lifespan:50000},
+  {name:'渡劫飞升',subStages:['渡劫期'],cultNeed:8000000,lifespan:999999},
+  {name:'真仙',subStages:['初期','中期','后期','大圆满'],cultNeed:50000000,lifespan:100000},
+  {name:'玄仙',subStages:['初期','中期','后期','大圆满'],cultNeed:200000000,lifespan:500000},
+  {name:'金仙',subStages:['初期','中期','后期','大圆满'],cultNeed:1000000000,lifespan:1000000},
+  {name:'太乙',subStages:['初期','中期','后期','大圆满'],cultNeed:5000000000,lifespan:5000000},
+  {name:'大罗',subStages:['大罗金仙'],cultNeed:20000000000,lifespan:99999999}
+];
+
+const SPIRITUAL_ROOTS=[
+  {name:'天灵根',speedMul:2.0,compBonus:30,mindBonus:10},
+  {name:'异灵根',speedMul:1.8,compBonus:20,mindBonus:15},
+  {name:'双灵根',speedMul:1.5,compBonus:10,mindBonus:5},
+  {name:'三灵根',speedMul:1.0,compBonus:0,mindBonus:0},
+  {name:'四灵根',speedMul:0.7,compBonus:-10,mindBonus:-5},
+  {name:'五灵根',speedMul:0.5,compBonus:-20,mindBonus:-10}
+];
+
+const ITEMS={
+  lingshi:{name:'下品灵石',icon:'ri-coin-fill',grade:'common',desc:'修仙界通用货币',type:'currency'},
+  lingshi_mid:{name:'中品灵石',icon:'ri-coin-fill',grade:'uncommon',desc:'蕴含更多灵气',type:'currency'},
+  lingshi_high:{name:'上品灵石',icon:'ri-coin-fill',grade:'rare',desc:'稀有高阶灵石',type:'currency'},
+  huiqi_dan:{name:'回气丹',icon:'ri-capsule-fill',grade:'common',desc:'恢复50点灵力',type:'pill',effect:{mp:50}},
+  huiqi_dan_mid:{name:'中品回气丹',icon:'ri-capsule-fill',grade:'uncommon',desc:'恢复200点灵力',type:'pill',effect:{mp:200}},
+  huiqi_dan_high:{name:'上品回气丹',icon:'ri-capsule-fill',grade:'rare',desc:'恢复500点灵力',type:'pill',effect:{mp:500}},
+  huxin_dan:{name:'护心丹',icon:'ri-capsule-fill',grade:'uncommon',desc:'恢复500点气血',type:'pill',effect:{hp:500}},
+  huxin_dan_mid:{name:'中品护心丹',icon:'ri-capsule-fill',grade:'rare',desc:'恢复2000点气血',type:'pill',effect:{hp:2000}},
+  zhuji_dan:{name:'筑基丹',icon:'ri-capsule-fill',grade:'rare',desc:'筑基突破必备丹药',type:'pill',effect:{breakBonus:0.2}},
+  pojing_dan:{name:'破境丹',icon:'ri-capsule-fill',grade:'rare',desc:'突破大境界时提升成功率',type:'pill',effect:{breakBonus:0.15}},
+  huaishen_dan:{name:'化神丹',icon:'ri-capsule-fill',grade:'epic',desc:'化神突破辅助丹药',type:'pill',effect:{breakBonus:0.1}},
+  ningdan_dan:{name:'凝丹丹',icon:'ri-capsule-fill',grade:'rare',desc:'结丹突破辅助丹药',type:'pill',effect:{breakBonus:0.15}},
+  suoming_dan:{name:'续命丹',icon:'ri-capsule-fill',grade:'epic',desc:'延寿50年',type:'pill',effect:{lifespan:50}},
+  suitil_dan:{name:'塑体丹',icon:'ri-capsule-fill',grade:'rare',desc:'永久提升10点攻击',type:'pill',effect:{atk:10}},
+  yangshen_dan:{name:'养神丹',icon:'ri-capsule-fill',grade:'rare',desc:'永久提升10点心境',type:'pill',effect:{mind:10}},
+  jingqi_dan:{name:'精气丹',icon:'ri-capsule-fill',grade:'uncommon',desc:'永久提升5点悟性',type:'pill',effect:{comp:5}},
+  lianti_dan:{name:'炼体丹',icon:'ri-capsule-fill',grade:'uncommon',desc:'永久提升10点防御',type:'pill',effect:{def:10}},
+  shensu_dan:{name:'神速丹',icon:'ri-capsule-fill',grade:'uncommon',desc:'永久提升10点速度',type:'pill',effect:{spd:10}},
+  dujie_dan:{name:'渡劫丹',icon:'ri-capsule-fill',grade:'epic',desc:'渡劫时大幅提升存活率',type:'pill',effect:{breakBonus:0.25}},
+  feisheng_dan:{name:'飞升丹',icon:'ri-capsule-fill',grade:'legend',desc:'飞升仙界的至宝丹药',type:'pill',effect:{breakBonus:0.3}},
+  qingxin_dan:{name:'清心丹',icon:'ri-capsule-fill',grade:'common',desc:'恢复20点心境',type:'pill',effect:{mind:20}},
+  qingxin_dan_mid:{name:'中品清心丹',icon:'ri-capsule-fill',grade:'uncommon',desc:'恢复50点心境',type:'pill',effect:{mind:50}},
+  lingcao:{name:'灵草',icon:'ri-plant-line',grade:'common',desc:'炼丹基础材料',type:'material'},
+  lingzhi:{name:'灵芝',icon:'ri-plant-line',grade:'uncommon',desc:'珍贵药材',type:'material'},
+  huolinguo:{name:'火灵果',icon:'ri-fire-fill',grade:'uncommon',desc:'蕴含火属性灵气',type:'material'},
+  binglingcao:{name:'冰灵草',icon:'ri-snowy-line',grade:'uncommon',desc:'蕴含冰属性灵气',type:'material'},
+  longxue:{name:'龙血草',icon:'ri-leaf-fill',grade:'rare',desc:'传说中的灵药',type:'material'},
+  fengxueguo:{name:'凤血果',icon:'ri-fire-fill',grade:'epic',desc:'凤凰栖息之地的神果',type:'material'},
+  tiancaidibao:{name:'天材地宝',icon:'ri-star-fill',grade:'legend',desc:'天地孕育的至宝',type:'material'},
+  xuantie:{name:'玄铁',icon:'ri-meteor-line',grade:'common',desc:'炼器基础矿石',type:'material'},
+  jingjinshi:{name:'精金石',icon:'ri-meteor-line',grade:'uncommon',desc:'上品炼器材料',type:'material'},
+  bingjing:{name:'冰晶',icon:'ri-shape-2-line',grade:'uncommon',desc:'蕴含寒气的炼器材料',type:'material'},
+  longlin:{name:'龙鳞',icon:'ri-shield-fill',grade:'rare',desc:'真龙之鳞',type:'material'},
+  fengyu:{name:'凤羽',icon:'ri-feather-fill',grade:'rare',desc:'凤凰之羽',type:'material'},
+  lingzhi_paper:{name:'灵纸',icon:'ri-file-paper-2-line',grade:'common',desc:'绘制符箓的载体',type:'material'},
+  zhusha:{name:'朱砂',icon:'ri-drop-fill',grade:'common',desc:'绘制符箓的墨料',type:'material'},
+  jingpo:{name:'精魄',icon:'ri-ghost-fill',grade:'uncommon',desc:'妖兽精魄',type:'material'},
+  yaohun:{name:'妖魂',icon:'ri-ghost-fill',grade:'rare',desc:'强大妖兽的魂魄',type:'material'},
+  shenjin:{name:'神金',icon:'ri-meteor-line',grade:'epic',desc:'天外神金',type:'material'},
+  hunjing:{name:'魂晶',icon:'ri-shining-fill',grade:'rare',desc:'凝聚魂力的结晶',type:'material'},
+  tianleimu:{name:'天雷木',icon:'ri-leaf-fill',grade:'rare',desc:'雷击之木',type:'material'},
+  jiuyangshi:{name:'九阳石',icon:'ri-fire-fill',grade:'epic',desc:'蕴含至阳之力的矿石',type:'material'},
+  talisman_lei:{name:'雷符',icon:'ri-flashlight-fill',grade:'common',desc:'造成雷属性伤害',type:'talisman',effect:{dmg:100}},
+  talisman_huo:{name:'火符',icon:'ri-fire-fill',grade:'common',desc:'造成火属性伤害',type:'talisman',effect:{dmg:80}},
+  talisman_dun:{name:'护盾符',icon:'ri-shield-fill',grade:'uncommon',desc:'获得500点护盾',type:'talisman',effect:{shield:500}},
+  talisman_bishui:{name:'避水符',icon:'ri-drop-line',grade:'common',desc:'水下呼吸',type:'talisman',effect:{}},
+  talisman_yinshen:{name:'隐身符',icon:'ri-eye-off-line',grade:'rare',desc:'隐匿身形',type:'talisman',effect:{}},
+  talisman_chuansong:{name:'传送符',icon:'ri-send-plane-fill',grade:'rare',desc:'瞬间传送',type:'talisman',effect:{}},
+  talisman_bing:{name:'冰符',icon:'ri-snowy-fill',grade:'common',desc:'造成冰属性伤害',type:'talisman',effect:{dmg:90}},
+  talisman_feng:{name:'风符',icon:'ri-windy-fill',grade:'common',desc:'造成风属性伤害',type:'talisman',effect:{dmg:70}},
+  talisman_lei_mid:{name:'雷暴符',icon:'ri-flashlight-fill',grade:'uncommon',desc:'大范围雷属性伤害',type:'talisman',effect:{dmg:300}},
+  talisman_huo_mid:{name:'烈焰符',icon:'ri-fire-fill',grade:'uncommon',desc:'大火属性伤害',type:'talisman',effect:{dmg:250}},
+  talisman_dun_mid:{name:'金甲符',icon:'ri-shield-fill',grade:'rare',desc:'获得2000点护盾',type:'talisman',effect:{shield:2000}},
+  talisman_suoming:{name:'索命符',icon:'ri-skull-fill',grade:'epic',desc:'对敌人造成巨额伤害',type:'talisman',effect:{dmg:1000}},
+  talisman_feisheng:{name:'飞升符',icon:'ri-rocket-fill',grade:'legend',desc:'瞬间恢复全部状态',type:'talisman',effect:{hp:99999,mp:99999}},
+  gongfa_basic:{name:'引气诀',icon:'ri-book-open-fill',grade:'common',desc:'黄阶下品功法',type:'technique',effect:{cultSpeed:1.0}},
+  gongfa_huang:{name:'五行诀',icon:'ri-book-open-fill',grade:'uncommon',desc:'黄阶上品功法',type:'technique',effect:{cultSpeed:1.3}},
+  gongfa_xuan:{name:'紫气东来功',icon:'ri-book-open-fill',grade:'rare',desc:'玄阶中品功法',type:'technique',effect:{cultSpeed:1.6,compBonus:5}},
+  gongfa_di:{name:'混元功',icon:'ri-book-open-fill',grade:'epic',desc:'地阶上品功法',type:'technique',effect:{cultSpeed:2.0,compBonus:10,mindBonus:5}},
+  gongfa_tian:{name:'太上感应篇',icon:'ri-book-open-fill',grade:'legend',desc:'天阶功法',type:'technique',effect:{cultSpeed:3.0,compBonus:20,mindBonus:15}},
+  weapon_feijian:{name:'飞剑',icon:'ri-sword-fill',grade:'rare',desc:'可御剑飞行，攻击+50',type:'weapon',effect:{atk:50,canFly:true}},
+  weapon_lingjian:{name:'灵剑',icon:'ri-sword-fill',grade:'uncommon',desc:'灵器品质，攻击+20',type:'weapon',effect:{atk:20}},
+  weapon_tiejian:{name:'铁剑',icon:'ri-sword-fill',grade:'common',desc:'凡器，攻击+5',type:'weapon',effect:{atk:5}},
+  weapon_baojian:{name:'法宝飞剑',icon:'ri-sword-fill',grade:'epic',desc:'法宝品质，攻击+200',type:'weapon',effect:{atk:200,canFly:true}},
+  weapon_xianjian:{name:'仙剑',icon:'ri-sword-fill',grade:'legend',desc:'仙器，攻击+1000',type:'weapon',effect:{atk:1000,canFly:true}},
+  weapon_lingdao:{name:'灵刀',icon:'ri-sword-fill',grade:'uncommon',desc:'攻击+25',type:'weapon',effect:{atk:25}},
+  weapon_baojian_mid:{name:'玄铁重剑',icon:'ri-sword-fill',grade:'rare',desc:'攻击+80',type:'weapon',effect:{atk:80}},
+  weapon_huo:{name:'烈焰枪',icon:'ri-sword-fill',grade:'rare',desc:'攻击+90',type:'weapon',effect:{atk:90}},
+  weapon_lei:{name:'雷霆戟',icon:'ri-sword-fill',grade:'epic',desc:'攻击+150',type:'weapon',effect:{atk:150}},
+  weapon_feng:{name:'风灵弓',icon:'ri-sword-fill',grade:'rare',desc:'攻击+70',type:'weapon',effect:{atk:70}},
+  weapon_bing:{name:'寒冰刃',icon:'ri-sword-fill',grade:'epic',desc:'攻击+120',type:'weapon',effect:{atk:120}},
+  weapon_shen:{name:'神兵·天罚',icon:'ri-sword-fill',grade:'legend',desc:'攻击+500',type:'weapon',effect:{atk:500}},
+  armor_dun:{name:'灵盾',icon:'ri-shield-fill',grade:'uncommon',desc:'防御+15',type:'armor',effect:{def:15}},
+  armor_bao:{name:'法宝护甲',icon:'ri-shield-fill',grade:'epic',desc:'防御+100',type:'armor',effect:{def:100}},
+  armor_ling:{name:'灵丝袍',icon:'ri-shield-fill',grade:'uncommon',desc:'防御+25',type:'armor',effect:{def:25}},
+  armor_xuan:{name:'玄铁甲',icon:'ri-shield-fill',grade:'rare',desc:'防御+50',type:'armor',effect:{def:50}},
+  armor_bing:{name:'冰晶护甲',icon:'ri-shield-fill',grade:'rare',desc:'防御+60',type:'armor',effect:{def:60}},
+  armor_shen:{name:'天罡战甲',icon:'ri-shield-fill',grade:'epic',desc:'防御+150',type:'armor',effect:{def:150}},
+  armor_xian:{name:'仙甲·混元',icon:'ri-shield-fill',grade:'legend',desc:'防御+400',type:'armor',effect:{def:400}},
+  accessory_ling:{name:'灵玉佩',icon:'ri-shining-fill',grade:'uncommon',desc:'灵力+100',type:'accessory',effect:{mp:100}},
+  accessory_shen:{name:'神识玉',icon:'ri-shining-fill',grade:'rare',desc:'悟性+20',type:'accessory',effect:{comp:20}},
+  accessory_huo:{name:'火灵珠',icon:'ri-shining-fill',grade:'rare',desc:'攻击+30',type:'accessory',effect:{atk:30}},
+  accessory_bing:{name:'冰灵珠',icon:'ri-shining-fill',grade:'rare',desc:'防御+30',type:'accessory',effect:{def:30}},
+  accessory_lei:{name:'雷灵珠',icon:'ri-shining-fill',grade:'epic',desc:'攻击+60,速度+10',type:'accessory',effect:{atk:60,spd:10}},
+  accessory_feng:{name:'风灵珠',icon:'ri-shining-fill',grade:'epic',desc:'速度+30',type:'accessory',effect:{spd:30}},
+  accessory_xian:{name:'乾坤戒',icon:'ri-shining-fill',grade:'legend',desc:'所有属性+50',type:'accessory',effect:{atk:50,def:50,mp:200,comp:10}},
+  // 仙界物品
+  xianshi:{name:'仙石',icon:'ri-coin-fill',grade:'legend',desc:'仙界通用货币',type:'currency'},
+  shengshi:{name:'圣石',icon:'ri-coin-fill',grade:'myth',desc:'圣界至高货币',type:'currency'},
+  xianjing:{name:'仙晶',icon:'ri-gem-fill',grade:'legend',desc:'仙界灵气凝结的晶体',type:'material'},
+  xiancao:{name:'仙草',icon:'ri-plant-line',grade:'legend',desc:'仙界灵草',type:'material'},
+  shengyao:{name:'圣药',icon:'ri-plant-fill',grade:'myth',desc:'圣界神药',type:'material'},
+  shentie:{name:'神铁',icon:'ri-meteor-line',grade:'legend',desc:'仙界神铁',type:'material'},
+  xianlingmu:{name:'仙灵木',icon:'ri-leaf-fill',grade:'legend',desc:'仙界灵木',type:'material'},
+  hundunshi:{name:'混沌石',icon:'ri-shining-fill',grade:'myth',desc:'混沌之力凝结的奇石',type:'material'},
+  shenglingshi:{name:'圣灵石',icon:'ri-star-fill',grade:'myth',desc:'圣灵之力凝结',type:'material'},
+  fenghuangdan:{name:'凤凰胆',icon:'ri-fire-fill',grade:'legend',desc:'凤凰真血凝结的宝药',type:'material'},
+  longsui:{name:'龙髓',icon:'ri-leaf-fill',grade:'legend',desc:'真龙骨髓',type:'material'},
+  tiandaosuipian:{name:'天道碎片',icon:'ri-shining-2-fill',grade:'myth',desc:'天道法则碎片',type:'material'},
+  xianleishui:{name:'仙雷水',icon:'ri-flashlight-fill',grade:'legend',desc:'仙界雷霆凝液',type:'material'},
+  zhenxian_dan:{name:'真仙丹',icon:'ri-capsule-fill',grade:'legend',desc:'真仙突破辅助丹药',type:'pill',effect:{breakBonus:0.35}},
+  xuanxian_dan:{name:'玄仙丹',icon:'ri-capsule-fill',grade:'legend',desc:'玄仙突破辅助丹药',type:'pill',effect:{breakBonus:0.3}},
+  jinxian_dan:{name:'金仙丹',icon:'ri-capsule-fill',grade:'legend',desc:'金仙突破辅助丹药',type:'pill',effect:{breakBonus:0.28}},
+  taiyi_dan:{name:'太乙丹',icon:'ri-capsule-fill',grade:'myth',desc:'太乙突破辅助丹药',type:'pill',effect:{breakBonus:0.25}},
+  daluo_dan:{name:'大罗丹',icon:'ri-capsule-fill',grade:'myth',desc:'大罗金仙突破至宝丹药',type:'pill',effect:{breakBonus:0.2}},
+  huixian_dan:{name:'回仙丹',icon:'ri-capsule-fill',grade:'legend',desc:'恢复5000点仙力',type:'pill',effect:{mp:5000}},
+  huixian_dan_high:{name:'上品回仙丹',icon:'ri-capsule-fill',grade:'myth',desc:'恢复50000点仙力',type:'pill',effect:{mp:50000}},
+  shengti_dan:{name:'圣体丹',icon:'ri-capsule-fill',grade:'myth',desc:'永久提升100点攻击和防御',type:'pill',effect:{atk:100,def:100}},
+  wudao_dan:{name:'悟道丹',icon:'ri-capsule-fill',grade:'myth',desc:'永久提升50点悟性',type:'pill',effect:{comp:50}},
+  zhanshi_dan:{name:'斩尸丹',icon:'ri-capsule-fill',grade:'myth',desc:'斩三尸辅助丹药',type:'pill',effect:{breakBonus:0.15}},
+  weapon_zhuxian:{name:'仙器·诛仙剑',icon:'ri-sword-fill',grade:'legend',desc:'上古杀器，攻击+5000',type:'weapon',effect:{atk:5000,canFly:true}},
+  weapon_taiyi:{name:'仙器·太乙剑',icon:'ri-sword-fill',grade:'legend',desc:'攻击+3000',type:'weapon',effect:{atk:3000,canFly:true}},
+  weapon_xianqiang:{name:'仙器·穿云枪',icon:'ri-sword-fill',grade:'legend',desc:'攻击+3500',type:'weapon',effect:{atk:3500}},
+  weapon_pangufan:{name:'圣器·盘古幡',icon:'ri-sword-fill',grade:'myth',desc:'开天圣器，攻击+20000',type:'weapon',effect:{atk:20000,canFly:true}},
+  weapon_taijitu:{name:'圣器·太极图',icon:'ri-shield-fill',grade:'myth',desc:'老子至宝，攻防兼备',type:'weapon',effect:{atk:15000,def:15000,canFly:true}},
+  armor_huntian:{name:'仙器·混天绫',icon:'ri-shield-fill',grade:'legend',desc:'防御+2000',type:'armor',effect:{def:2000}},
+  armor_xianjia_mid:{name:'仙器·九天玄女甲',icon:'ri-shield-fill',grade:'legend',desc:'防御+3000',type:'armor',effect:{def:3000}},
+  armor_baota:{name:'圣器·天地玄黄玲珑宝塔',icon:'ri-shield-fill',grade:'myth',desc:'防御+15000',type:'armor',effect:{def:15000}},
+  accessory_hundun:{name:'圣器·混沌钟',icon:'ri-shining-fill',grade:'myth',desc:'全属性+500',type:'accessory',effect:{atk:500,def:500,mp:5000,comp:100}},
+  accessory_xianyin:{name:'仙器·乾坤圈',icon:'ri-shining-fill',grade:'legend',desc:'攻击+2000',type:'accessory',effect:{atk:2000}},
+  accessory_shengyin:{name:'圣器·造化玉碟',icon:'ri-shining-fill',grade:'myth',desc:'全属性+1000，悟性+200',type:'accessory',effect:{atk:1000,def:1000,mp:10000,comp:200}},
+  talisman_wanjian:{name:'万剑符',icon:'ri-sword-fill',grade:'legend',desc:'召唤万剑齐发',type:'talisman',effect:{dmg:5000}},
+  talisman_tiandao:{name:'天道符',icon:'ri-shining-2-fill',grade:'myth',desc:'引动天道之力攻击',type:'talisman',effect:{dmg:50000}},
+  talisman_xianshi:{name:'仙识符',icon:'ri-eye-fill',grade:'legend',desc:'获得仙级护盾10000',type:'talisman',effect:{shield:10000}},
+  talisman_zhuansheng:{name:'转生符',icon:'ri-restart-line',grade:'myth',desc:'瞬间恢复全部状态',type:'talisman',effect:{hp:999999,mp:999999}}
+};
+
+const GRADE_NAMES={common:'凡品',uncommon:'良品',rare:'稀有',epic:'史诗',legend:'传说',myth:'神话'};
+const TYPE_NAMES={currency:'灵石',pill:'丹药',material:'材料',talisman:'符箓',technique:'功法',weapon:'武器',armor:'防具',accessory:'饰品'};
+
+// 获取所有功法
+function getAllGongfa(){
+  if(typeof GONGFA_DATA==='undefined')return[];
+  return[
+    ...(GONGFA_DATA.huang||[]),
+    ...(GONGFA_DATA.xuan||[]),
+    ...(GONGFA_DATA.di||[]),
+    ...(GONGFA_DATA.tian||[]),
+    ...(GONGFA_DATA.xian||[]),
+    ...(GONGFA_DATA.sheng||[])
+  ];
+}
+
+// ==================== 核心逻辑 ====================
+// player = 工作副本（内存中编辑，未提交到存档）
+// originalData = 存档原始数据快照（用于对比变更和放弃修改）
+let player=null;
+let originalData=null;
+let currentTab='player';
+let itemFilter='all';
+let gongfaFilter='all';
+let editingItemId=null;
+
+function init(){
+  // 填充境界选择
+  const realmSel=document.getElementById('editRealm');
+  REALMS.forEach((r,i)=>{
+    const opt=document.createElement('option');
+    opt.value=i;
+    opt.textContent=r.name;
+    realmSel.appendChild(opt);
+  });
+  realmSel.onchange=updateSubStageOptions;
+
+  // 填充装备选择
+  const weaponSel=document.getElementById('editWeapon');
+  const armorSel=document.getElementById('editArmor');
+  const accSel=document.getElementById('editAccessory');
+  const techSel=document.getElementById('editTech');
+  Object.entries(ITEMS).forEach(([id,item])=>{
+    if(item.type==='weapon'){
+      const o=document.createElement('option');o.value=id;o.textContent=`${item.name} (${GRADE_NAMES[item.grade]})`;weaponSel.appendChild(o);
+    }else if(item.type==='armor'){
+      const o=document.createElement('option');o.value=id;o.textContent=`${item.name} (${GRADE_NAMES[item.grade]})`;armorSel.appendChild(o);
+    }else if(item.type==='accessory'){
+      const o=document.createElement('option');o.value=id;o.textContent=`${item.name} (${GRADE_NAMES[item.grade]})`;accSel.appendChild(o);
+    }else if(item.type==='technique'){
+      const o=document.createElement('option');o.value=id;o.textContent=`${item.name} (${GRADE_NAMES[item.grade]})`;techSel.appendChild(o);
+    }
+  });
+
+  // 功法也在装备功法里
+  const allGf=getAllGongfa();
+  allGf.forEach(g=>{
+    const o=document.createElement('option');o.value=g.id;o.textContent=`${g.name} (${g.grade})`;techSel.appendChild(o);
+  });
+
+  // 填充宗门选择
+  const sectSel=document.getElementById('editSectId');
+  if(typeof getAllSects==='function'){
+    getAllSects().forEach(s=>{
+      const o=document.createElement('option');o.value=s.id;o.textContent=`${s.name} (${s.type})`;sectSel.appendChild(o);
+    });
+  }
+
+  // 物品筛选器
+  const filterContainer=document.getElementById('itemFilters');
+  const types=[{key:'all',label:'全部'},{key:'currency',label:'灵石'},{key:'pill',label:'丹药'},{key:'material',label:'材料'},{key:'talisman',label:'符箓'},{key:'weapon',label:'武器'},{key:'armor',label:'防具'},{key:'accessory',label:'饰品'}];
+  types.forEach(t=>{
+    const chip=document.createElement('div');
+    chip.className='chip'+(t.key==='all'?' active':'');
+    chip.textContent=t.label;
+    chip.onclick=()=>{itemFilter=t.key;document.querySelectorAll('#itemFilters .chip').forEach(c=>c.classList.remove('active'));chip.classList.add('active');renderItemGrid();};
+    filterContainer.appendChild(chip);
+  });
+
+  // 功法筛选器
+  const gfFilterContainer=document.getElementById('gongfaFilters');
+  const gfTypes=[{key:'all',label:'全部'},{key:'黄阶',label:'黄阶'},{key:'玄阶',label:'玄阶'},{key:'地阶',label:'地阶'},{key:'天阶',label:'天阶'},{key:'仙阶',label:'仙阶'},{key:'圣阶',label:'圣阶'}];
+  gfTypes.forEach(t=>{
+    const chip=document.createElement('div');
+    chip.className='chip'+(t.key==='all'?' active':'');
+    chip.textContent=t.label;
+    chip.onclick=()=>{gongfaFilter=t.key;document.querySelectorAll('#gongfaFilters .chip').forEach(c=>c.classList.remove('active'));chip.classList.add('active');renderGongfaList();};
+    gfFilterContainer.appendChild(chip);
+  });
+
+  // Tab切换
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+      currentTab=btn.dataset.tab;
+      if(currentTab==='raw'&&player){
+        // 切换到原始数据页时，将工作副本加载到编辑器
+        document.getElementById('jsonEditor').value=JSON.stringify(player,null,2);
+        document.getElementById('jsonView').textContent=JSON.stringify(player,null,2);
+      }
+      // 移动端点击导航后关闭侧栏
+      if(window.innerWidth<=768)closeSidebar();
+    };
+  });
+
+  reloadSave();
+}
+
+// 移动端侧栏切换
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+function reloadSave(){
+  const s=localStorage.getItem('xianxia_save');
+  if(!s){
+    player=null;
+    originalData=null;
+    document.getElementById('statusDot').className='status-dot offline';
+    document.getElementById('statusText').innerHTML='未找到存档，请先在游戏中创建角色';
+    document.getElementById('jsonView').textContent='未找到存档';
+    hideDirty();
+    showToast('未找到游戏存档','warning','ri-error-warning-line');
+    return;
+  }
+  try{
+    player=JSON.parse(s);
+    originalData=JSON.parse(JSON.stringify(player)); // 深拷贝存档快照
+    document.getElementById('statusDot').className='status-dot online';
+    document.getElementById('statusText').innerHTML='已加载存档：<strong>'+(player.name||'未知')+'</strong> · '+getRealmName();
+    hideDirty();
+    loadPlayerToForm();
+    editingItemId=null;
+    renderInventory();
+    renderItemGrid();
+    renderGongfaList();
+    renderOwnedGongfa();
+    document.getElementById('jsonView').textContent=JSON.stringify(player,null,2);
+    showToast('存档加载成功','success','ri-check-line');
+  }catch(e){
+    document.getElementById('statusText').textContent='存档解析失败: '+e.message;
+    showToast('存档解析失败: '+e.message,'warning','ri-error-warning-line');
+  }
+}
+
+function getRealmName(){
+  if(!player)return '';
+  const r=REALMS[player.realmIdx];
+  if(!r)return '';
+  return r.name+(r.subStages[player.subStageIdx]||'');
+}
+
+function updateSubStageOptions(){
+  const realmIdx=parseInt(document.getElementById('editRealm').value)||0;
+  const subSel=document.getElementById('editSubStage');
+  subSel.innerHTML='';
+  REALMS[realmIdx].subStages.forEach((s,i)=>{
+    const o=document.createElement('option');o.value=i;o.textContent=s;subSel.appendChild(o);
+  });
+}
+
+function loadPlayerToForm(){
+  if(!player)return;
+  // 基本信息
+  document.getElementById('editName').value=player.name||'';
+  document.getElementById('editRoot').value=player.rootIdx??3;
+  document.getElementById('editRealm').value=player.realmIdx??0;
+  updateSubStageOptions();
+  document.getElementById('editSubStage').value=player.subStageIdx??0;
+  document.getElementById('editAge').value=player.age??16;
+  // 生命灵力
+  document.getElementById('editHp').value=player.hp??100;
+  document.getElementById('editMaxHp').value=player.maxHp??100;
+  document.getElementById('editMp').value=player.mp??50;
+  document.getElementById('editMaxMp').value=player.maxMp??50;
+  // 资源
+  document.getElementById('editStones').value=player.spiritualStones??100;
+  document.getElementById('editLifespan').value=player.lifespan??80;
+  document.getElementById('editMaxLifespan').value=player.maxLifespan??80;
+  document.getElementById('editCultivation').value=player.cultivation??0;
+  // 属性
+  document.getElementById('editAtk').value=player.baseAtk??10;
+  document.getElementById('editDef').value=player.baseDef??5;
+  document.getElementById('editSpd').value=player.baseSpd??10;
+  document.getElementById('editComp').value=player.comprehension??50;
+  document.getElementById('editMind').value=player.mentalState??50;
+  // 装备
+  document.getElementById('editWeapon').value=player.equipped?.weapon||'';
+  document.getElementById('editArmor').value=player.equipped?.armor||'';
+  document.getElementById('editAccessory').value=player.equipped?.accessory||'';
+  document.getElementById('editTech').value=player.equipped?.technique||'gongfa_basic';
+  // 宗门
+  document.getElementById('editSectId').value=player.sectId||'';
+  document.getElementById('editSectContrib').value=player.sectContribution??0;
+  document.getElementById('editSectTasks').value=(player.sectTasksDone||[]).join(',');
+  // 统计
+  const st=player.stats||{};
+  document.getElementById('editStatKill').value=st.monstersKilled??0;
+  document.getElementById('editStatExplore').value=st.realmsExplored??0;
+  document.getElementById('editStatPill').value=st.pillsRefined??0;
+  document.getElementById('editStatForge').value=st.weaponsForged??0;
+  document.getElementById('editStatTalisman').value=st.talismansDrawn??0;
+  document.getElementById('editStatFormation').value=st.formationsSet??0;
+  document.getElementById('editStatDao').value=st.daoComprehensions??0;
+  document.getElementById('editStatBreak').value=st.breakthroughs??0;
+
+  // 状态显示
+  renderStatDisplay();
+  // 绑定表单自动同步到工作副本
+  attachFormListeners();
+}
+
+function renderStatDisplay(){
+  if(!player)return;
+  const el=document.getElementById('statDisplay');
+  el.innerHTML=`
+    <div class="stat-box"><div class="stat-val">${player.spiritualStones??0}</div><div class="stat-label">灵石</div></div>
+    <div class="stat-box"><div class="stat-val">${player.lifespan??0}/${player.maxLifespan??0}</div><div class="stat-label">寿命</div></div>
+    <div class="stat-box"><div class="stat-val">${getRealmName()}</div><div class="stat-label">境界</div></div>
+    <div class="stat-box"><div class="stat-val">${player.hp??0}/${player.maxHp??0}</div><div class="stat-label">气血</div></div>
+    <div class="stat-box"><div class="stat-val">${player.mp??0}/${player.maxMp??0}</div><div class="stat-label">灵力</div></div>
+    <div class="stat-box"><div class="stat-val">${Object.keys(player.inventory||{}).length}</div><div class="stat-label">物品种类</div></div>
+    <div class="stat-box"><div class="stat-val">${(player.techniques||[]).length}</div><div class="stat-label">功法数</div></div>
+  `;
+}
+
+// ==================== 工作副本同步（不写入存档） ====================
+function attachFormListeners(){
+  const ids=['editName','editRoot','editRealm','editSubStage','editAge',
+    'editHp','editMaxHp','editMp','editMaxMp',
+    'editStones','editLifespan','editMaxLifespan','editCultivation',
+    'editAtk','editDef','editSpd','editComp','editMind',
+    'editWeapon','editArmor','editAccessory','editTech',
+    'editSectId','editSectContrib','editSectTasks',
+    'editStatKill','editStatExplore','editStatPill','editStatForge',
+    'editStatTalisman','editStatFormation','editStatDao','editStatBreak'];
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.oninput=()=>syncFormToPlayer();
+      el.onchange=()=>syncFormToPlayer();
+    }
+  });
+}
+
+function syncFormToPlayer(){
+  if(!player)return;
+  // 基本信息
+  player.name=document.getElementById('editName').value||'无名修士';
+  player.rootIdx=parseInt(document.getElementById('editRoot').value)||0;
+  player.realmIdx=parseInt(document.getElementById('editRealm').value)||0;
+  player.subStageIdx=parseInt(document.getElementById('editSubStage').value)||0;
+  player.age=parseInt(document.getElementById('editAge').value)||16;
+  // 生命灵力
+  player.hp=parseInt(document.getElementById('editHp').value)||0;
+  player.maxHp=parseInt(document.getElementById('editMaxHp').value)||1;
+  player.mp=parseInt(document.getElementById('editMp').value)||0;
+  player.maxMp=parseInt(document.getElementById('editMaxMp').value)||1;
+  // 资源
+  player.spiritualStones=parseInt(document.getElementById('editStones').value)||0;
+  player.lifespan=parseInt(document.getElementById('editLifespan').value)||0;
+  player.maxLifespan=parseInt(document.getElementById('editMaxLifespan').value)||1;
+  player.cultivation=parseInt(document.getElementById('editCultivation').value)||0;
+  // 属性
+  player.baseAtk=parseInt(document.getElementById('editAtk').value)||0;
+  player.baseDef=parseInt(document.getElementById('editDef').value)||0;
+  player.baseSpd=parseInt(document.getElementById('editSpd').value)||0;
+  player.comprehension=parseInt(document.getElementById('editComp').value)||0;
+  player.mentalState=parseInt(document.getElementById('editMind').value)||0;
+  // 装备
+  if(!player.equipped)player.equipped={};
+  player.equipped.weapon=document.getElementById('editWeapon').value||null;
+  player.equipped.armor=document.getElementById('editArmor').value||null;
+  player.equipped.accessory=document.getElementById('editAccessory').value||null;
+  player.equipped.technique=document.getElementById('editTech').value||'gongfa_basic';
+  // 宗门
+  player.sectId=document.getElementById('editSectId').value||null;
+  player.sectContribution=parseInt(document.getElementById('editSectContrib').value)||0;
+  const tasksStr=document.getElementById('editSectTasks').value.trim();
+  player.sectTasksDone=tasksStr?tasksStr.split(',').map(s=>s.trim()).filter(s=>s):[];
+  // 统计
+  if(!player.stats)player.stats={};
+  player.stats.monstersKilled=parseInt(document.getElementById('editStatKill').value)||0;
+  player.stats.realmsExplored=parseInt(document.getElementById('editStatExplore').value)||0;
+  player.stats.pillsRefined=parseInt(document.getElementById('editStatPill').value)||0;
+  player.stats.weaponsForged=parseInt(document.getElementById('editStatForge').value)||0;
+  player.stats.talismansDrawn=parseInt(document.getElementById('editStatTalisman').value)||0;
+  player.stats.formationsSet=parseInt(document.getElementById('editStatFormation').value)||0;
+  player.stats.daoComprehensions=parseInt(document.getElementById('editStatDao').value)||0;
+  player.stats.breakthroughs=parseInt(document.getElementById('editStatBreak').value)||0;
+
+  // 更新显示（不写入localStorage）
+  renderStatDisplay();
+  document.getElementById('jsonView').textContent=JSON.stringify(player,null,2);
+  updateDirtyStatus();
+}
+
+// 脏数据追踪
+function isDirty(){
+  if(!player||!originalData)return false;
+  return JSON.stringify(player)!==JSON.stringify(originalData);
+}
+
+function updateDirtyStatus(){
+  const badge=document.getElementById('dirtyBadge');
+  if(isDirty()){
+    badge.classList.add('show');
+  }else{
+    badge.classList.remove('show');
+  }
+}
+
+function hideDirty(){
+  document.getElementById('dirtyBadge').classList.remove('show');
+}
+
+// 保存按钮（仅同步表单到工作副本，不写入存档）
+function savePlayerData(){
+  if(!player){
+    showToast('请先读取存档','warning','ri-error-warning-line');
+    return;
+  }
+  syncFormToPlayer();
+  showToast('修改已同步到工作区（未写入存档，请点击"应用修改到存档"）','info','ri-information-line');
+}
+
+// ==================== 物品管理 ====================
+function renderInventory(){
+  if(!player)return;
+  const el=document.getElementById('invList');
+  const inv=player.inventory||{};
+  const entries=Object.entries(inv).filter(([id,count])=>count>0);
+  if(entries.length===0){
+    el.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:1rem">背包为空</div>';
+    return;
+  }
+  el.innerHTML=entries.map(([id,count])=>{
+    const item=ITEMS[id];
+    if(!item)return `<div class="inv-list-item"><div class="item-info"><div class="item-name">${id}</div><div class="item-desc">未知物品</div></div><div class="item-count">${count}</div><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeItem('${id}')"><i class="ri-delete-bin-line"></i></button></div>`;
+    const isEditing=editingItemId===id;
+    return `<div class="inv-list-item ${isEditing?'editing':''}" onclick="editItemInline('${id}')">
+      <div class="item-icon grade-bg-${item.grade}"><i class="${item.icon} grade-${item.grade}"></i></div>
+      <div class="item-info"><div class="item-name">${item.name}</div><div class="item-desc">${TYPE_NAMES[item.type]||''} · ${GRADE_NAMES[item.grade]||''}</div></div>
+      ${isEditing?
+        `<input type="number" class="item-edit-input" value="${count}" min="0" onclick="event.stopPropagation()" oninput="setItemCount('${id}',this.value)" onkeydown="if(event.key==='Enter')this.blur()" onblur="cancelEditItem()" autofocus>`:
+        `<div class="item-count">${count}</div>`
+      }
+      <button class="btn btn-sm" onclick="event.stopPropagation();changeItemCount('${id}',1)"><i class="ri-add-line"></i></button>
+      <button class="btn btn-sm" onclick="event.stopPropagation();changeItemCount('${id}',-1)"><i class="ri-subtract-line"></i></button>
+      <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeItem('${id}')"><i class="ri-delete-bin-line"></i></button>
+    </div>`;
+  }).join('');
+  if(!editingItemId){
+    const hint=document.createElement('div');
+    hint.className='edit-hint';
+    hint.innerHTML='<i class="ri-edit-line"></i> 点击物品可直接修改数量';
+    el.appendChild(hint);
+  }
+}
+
+function editItemInline(id){
+  editingItemId=id;
+  renderInventory();
+  setTimeout(()=>{
+    const input=document.querySelector('.item-edit-input');
+    if(input){input.focus();input.select();}
+  },50);
+}
+
+function cancelEditItem(){
+  editingItemId=null;
+  renderInventory();
+}
+
+function setItemCount(id,val){
+  if(!player)return;
+  if(!player.inventory)player.inventory={};
+  const n=parseInt(val)||0;
+  if(n<=0){
+    delete player.inventory[id];
+  }else{
+    player.inventory[id]=n;
+  }
+  updateDirtyStatus();
+  document.getElementById('jsonView').textContent=JSON.stringify(player,null,2);
+  renderStatDisplay();
+}
+
+function changeItemCount(id,delta){
+  if(!player)return;
+  editingItemId=null;
+  if(!player.inventory)player.inventory={};
+  player.inventory[id]=(player.inventory[id]||0)+delta;
+  if(player.inventory[id]<=0){delete player.inventory[id];}
+  renderInventory();
+  updateDirtyStatus();
+}
+
+function removeItem(id){
+  if(!player||!player.inventory)return;
+  editingItemId=null;
+  delete player.inventory[id];
+  renderInventory();
+  updateDirtyStatus();
+  showToast('已移除物品（未写入存档）','info','ri-delete-bin-line');
+}
+
+function addItemToInv(id,count){
+  if(!player)return;
+  editingItemId=null;
+  if(!player.inventory)player.inventory={};
+  player.inventory[id]=(player.inventory[id]||0)+count;
+  renderInventory();
+  updateDirtyStatus();
+  showToast(`已添加 ${ITEMS[id]?.name||id} x${count}（未写入存档）`,'success','ri-check-line');
+}
+
+function renderItemGrid(){
+  const search=(document.getElementById('itemSearch')?.value||'').toLowerCase();
+  const grid=document.getElementById('itemGrid');
+  const entries=Object.entries(ITEMS).filter(([id,item])=>{
+    if(itemFilter!=='all'&&item.type!==itemFilter)return false;
+    if(search&&!item.name.toLowerCase().includes(search)&&!id.toLowerCase().includes(search)&&!(item.desc||'').toLowerCase().includes(search))return false;
+    return true;
+  });
+  grid.innerHTML=entries.map(([id,item])=>{
+    const owned=player&&player.inventory&&player.inventory[id];
+    return `<div class="item-card">
+      <div class="item-icon grade-bg-${item.grade}"><i class="${item.icon} grade-${item.grade}"></i></div>
+      <div class="item-info">
+        <div class="item-name grade-${item.grade}">${item.name} ${owned?'<span class="owned-badge">已有'+owned+'</span>':''}</div>
+        <div class="item-desc">${TYPE_NAMES[item.type]||''} · ${item.desc||''}</div>
+      </div>
+      <div class="item-action">
+        <button class="btn btn-sm btn-success" onclick="addItemToInv('${id}',1)">+1</button>
+        <button class="btn btn-sm btn-success" onclick="addItemToInv('${id}',10)">+10</button>
+        <button class="btn btn-sm btn-success" onclick="addItemToInv('${id}',99)">+99</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== 功法管理 ====================
+function renderOwnedGongfa(){
+  if(!player)return;
+  const el=document.getElementById('ownedGongfa');
+  const techs=player.techniques||[];
+  if(techs.length===0){
+    el.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:1rem">尚未获得任何功法</div>';
+    return;
+  }
+  const allGf=getAllGongfa();
+  el.innerHTML=techs.map(id=>{
+    const gf=allGf.find(g=>g.id===id);
+    if(!gf){
+      // 基础功法
+      const item=ITEMS[id];
+      if(!item)return `<div class="gongfa-card"><div class="gf-header"><span class="gf-name">${id}</span><button class="btn btn-sm btn-danger" onclick="removeGongfa('${id}')">移除</button></div></div>`;
+      return `<div class="gongfa-card"><div class="gf-header"><span class="gf-name">${item.name}</span><button class="btn btn-sm btn-danger" onclick="removeGongfa('${id}')"><i class="ri-delete-bin-line"></i> 移除</button></div><div class="gf-meta">${GRADE_NAMES[item.grade]||''} · 基础功法</div><div class="gf-desc">${item.desc||''}</div></div>`;
+    }
+    return `<div class="gongfa-card">
+      <div class="gf-header">
+        <span class="gf-name">${gf.name}</span>
+        <button class="btn btn-sm btn-danger" onclick="removeGongfa('${gf.id}')"><i class="ri-delete-bin-line"></i> 移除</button>
+      </div>
+      <div class="gf-meta">${gf.grade} · ${gf.element}属性 · ${gf.novel}</div>
+      <div class="gf-desc">${gf.desc||''}</div>
+      <div class="gf-meta" style="margin-top:0.3rem">修炼速度x${gf.cultSpeed} · 悟性+${gf.compBonus} · 心境+${gf.mindBonus}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderGongfaList(){
+  const search=(document.getElementById('gongfaSearch')?.value||'').toLowerCase();
+  const el=document.getElementById('gongfaList');
+  const allGf=getAllGongfa();
+  const ownedTechs=player?(player.techniques||[]):[];
+  // 只显示未获得的功法
+  const filtered=allGf.filter(g=>{
+    if(ownedTechs.includes(g.id))return false;
+    if(gongfaFilter!=='all'&&g.grade!==gongfaFilter)return false;
+    if(search&&!g.name.toLowerCase().includes(search)&&!g.novel.toLowerCase().includes(search)&&!g.element.toLowerCase().includes(search)&&!(g.desc||'').toLowerCase().includes(search))return false;
+    return true;
+  });
+  if(filtered.length===0){
+    el.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:1rem">无匹配功法（可能已全部获得）</div>';
+    return;
+  }
+  el.innerHTML=filtered.map(g=>{
+    return `<div class="gongfa-card">
+      <div class="gf-header">
+        <span class="gf-name">${g.name}</span>
+        <button class="btn btn-sm btn-success" onclick="addGongfa('${g.id}')"><i class="ri-add-line"></i> 获得</button>
+      </div>
+      <div class="gf-meta">${g.grade} · ${g.element}属性 · 出自《${g.novel}》</div>
+      <div class="gf-desc">${g.desc||''}</div>
+      <div class="gf-meta" style="margin-top:0.3rem">修炼速度x${g.cultSpeed} · 悟性+${g.compBonus} · 心境+${g.mindBonus} · 攻击+${g.atkBonus} · 防御+${g.defBonus}</div>
+      <div class="gf-meta" style="margin-top:0.2rem">获取途径: ${g.obtain||'未知'} · ${g.obtainDesc||''}</div>
+    </div>`;
+  }).join('');
+}
+
+function addGongfa(id){
+  if(!player)return;
+  if(!player.techniques)player.techniques=[];
+  if(player.techniques.includes(id)){
+    showToast('已拥有此功法','info','ri-information-line');
+    return;
+  }
+  player.techniques.push(id);
+  renderOwnedGongfa();
+  renderGongfaList();
+  updateDirtyStatus();
+  showToast('已获得功法，已移至"已获得"列表（未写入存档）','success','ri-check-line');
+}
+
+function removeGongfa(id){
+  if(!player||!player.techniques)return;
+  player.techniques=player.techniques.filter(t=>t!==id);
+  if(player.equipped&&player.equipped.technique===id){
+    player.equipped.technique='gongfa_basic';
+    if(!player.techniques.includes('gongfa_basic'))player.techniques.push('gongfa_basic');
+  }
+  renderOwnedGongfa();
+  renderGongfaList();
+  updateDirtyStatus();
+  showToast('已移除功法（未写入存档）','info','ri-delete-bin-line');
+}
+
+// ==================== JSON 编辑 ====================
+function loadJsonToEditor(){
+  // 从存档（localStorage）加载到编辑器，方便对比
+  const s=localStorage.getItem('xianxia_save');
+  if(s){
+    document.getElementById('jsonEditor').value=JSON.stringify(JSON.parse(s),null,2);
+  }else{
+    showToast('无存档可加载','warning','ri-error-warning-line');
+  }
+}
+
+function applyJsonEdit(){
+  const text=document.getElementById('jsonEditor').value.trim();
+  if(!text){showToast('请输入JSON数据','warning','ri-error-warning-line');return;}
+  try{
+    const data=JSON.parse(text);
+    player=data; // 仅更新工作副本，不写入存档
+    document.getElementById('statusText').innerHTML='已加载存档：<strong>'+(player.name||'未知')+'</strong> · '+getRealmName();
+    loadPlayerToForm();
+    editingItemId=null;
+    renderInventory();
+    renderItemGrid();
+    renderGongfaList();
+    renderOwnedGongfa();
+    document.getElementById('jsonView').textContent=JSON.stringify(data,null,2);
+    updateDirtyStatus();
+    showToast('JSON数据已同步到工作区（未写入存档）','success','ri-check-line');
+  }catch(e){
+    showToast('JSON解析失败: '+e.message,'warning','ri-error-warning-line');
+  }
+}
+
+function exportSave(){
+  const s=localStorage.getItem('xianxia_save');
+  if(!s){showToast('无存档可导出','warning','ri-error-warning-line');return;}
+  const blob=new Blob([s],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='xianxia_save_'+Date.now()+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('存档已导出','success','ri-download-line');
+}
+
+function importSave(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      localStorage.setItem('xianxia_save',JSON.stringify(data));
+      reloadSave();
+      showToast('存档导入成功！','success','ri-check-line');
+    }catch(err){
+      showToast('导入失败: '+err.message,'warning','ri-error-warning-line');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function deleteSave(){
+  if(!confirm('确定要删除存档吗？此操作不可恢复！'))return;
+  localStorage.removeItem('xianxia_save');
+  player=null;
+  originalData=null;
+  document.getElementById('statusDot').className='status-dot offline';
+  document.getElementById('statusText').textContent='存档已删除';
+  document.getElementById('jsonView').textContent='存档已删除';
+  hideDirty();
+  showToast('存档已删除','info','ri-delete-bin-line');
+}
+
+function saveAndExit(){
+  if(isDirty()){
+    if(!confirm('有未保存的修改，是否在退出前写入存档？'))return;
+    syncFormToPlayer();
+    localStorage.setItem('xianxia_save',JSON.stringify(player));
+  }
+  setTimeout(()=>{location.href='index.html';},300);
+}
+
+// ==================== 提交工作流 ====================
+
+// 放弃修改：从原始快照恢复工作副本
+function discardChanges(){
+  if(!originalData){
+    showToast('没有可放弃的修改','info','ri-information-line');
+    return;
+  }
+  if(!isDirty()){
+    showToast('没有未保存的修改','info','ri-information-line');
+    return;
+  }
+  if(!confirm('确定要放弃所有未保存的修改吗？'))return;
+  player=JSON.parse(JSON.stringify(originalData));
+  loadPlayerToForm();
+  editingItemId=null;
+  renderInventory();
+  renderItemGrid();
+  renderGongfaList();
+  renderOwnedGongfa();
+  document.getElementById('jsonView').textContent=JSON.stringify(player,null,2);
+  hideDirty();
+  showToast('已放弃所有修改，恢复到存档状态','success','ri-check-line');
+}
+
+// 预览变更：生成diff并弹出确认弹窗
+function showCommitPreview(){
+  if(!player){
+    showToast('请先读取存档','warning','ri-error-warning-line');
+    return;
+  }
+  syncFormToPlayer(); // 先同步表单数据到工作副本
+  const diffHtml=generateDiff();
+  document.getElementById('diffContent').innerHTML=diffHtml;
+  document.getElementById('commitModal').classList.add('show');
+}
+
+// 应用修改到存档（先预览）
+function commitChanges(){
+  showCommitPreview();
+}
+
+// 确认提交：写入localStorage
+function confirmCommit(){
+  if(!player){
+    showToast('无数据可保存','warning','ri-error-warning-line');
+    return;
+  }
+  syncFormToPlayer(); // 确保表单数据已同步
+  localStorage.setItem('xianxia_save',JSON.stringify(player));
+  originalData=JSON.parse(JSON.stringify(player)); // 更新原始快照
+  hideDirty();
+  closeCommitModal();
+  document.getElementById('statusText').innerHTML='已加载存档：<strong>'+player.name+'</strong> · '+getRealmName();
+  showToast('修改已成功写入存档！','success','ri-check-line');
+}
+
+function closeCommitModal(){
+  document.getElementById('commitModal').classList.remove('show');
+}
+
+// 生成变更对比diff
+function generateDiff(){
+  if(!originalData||!player){
+    return '<div class="diff-none">无数据</div>';
+  }
+
+  const changes=[];
+
+  // 基础字段对比
+  const fields=[
+    {key:'name',label:'道号'},
+    {key:'rootIdx',label:'灵根',map:v=>SPIRITUAL_ROOTS[v]?.name||v},
+    {key:'realmIdx',label:'境界',map:v=>REALMS[v]?.name||v},
+    {key:'subStageIdx',label:'阶段'},
+    {key:'age',label:'年龄'},
+    {key:'hp',label:'当前气血'},
+    {key:'maxHp',label:'最大气血'},
+    {key:'mp',label:'当前灵力'},
+    {key:'maxMp',label:'最大灵力'},
+    {key:'spiritualStones',label:'灵石'},
+    {key:'lifespan',label:'当前寿命'},
+    {key:'maxLifespan',label:'最大寿命'},
+    {key:'cultivation',label:'修为'},
+    {key:'baseAtk',label:'基础攻击'},
+    {key:'baseDef',label:'基础防御'},
+    {key:'baseSpd',label:'基础速度'},
+    {key:'comprehension',label:'悟性'},
+    {key:'mentalState',label:'心境'},
+    {key:'sectId',label:'宗门',map:v=>{if(!v)return'无';const s=getAllSects?.()?.find(s=>s.id===v);return s?s.name:v;}},
+    {key:'sectContribution',label:'宗门贡献'},
+  ];
+
+  fields.forEach(f=>{
+    const oldVal=originalData[f.key];
+    const newVal=player[f.key];
+    if(JSON.stringify(oldVal)!==JSON.stringify(newVal)){
+      changes.push({
+        label:f.label,
+        old:f.map?f.map(oldVal):(oldVal??'无'),
+        new:f.map?f.map(newVal):(newVal??'无'),
+        type:'mod'
+      });
+    }
+  });
+
+  // 装备对比
+  const equipFields=[
+    {key:'weapon',label:'武器'},
+    {key:'armor',label:'防具'},
+    {key:'accessory',label:'饰品'},
+    {key:'technique',label:'修炼功法'},
+  ];
+  equipFields.forEach(f=>{
+    const oldVal=originalData.equipped?.[f.key];
+    const newVal=player.equipped?.[f.key];
+    if(JSON.stringify(oldVal)!==JSON.stringify(newVal)){
+      changes.push({
+        label:f.label,
+        old:oldVal?(ITEMS[oldVal]?.name||oldVal):'无',
+        new:newVal?(ITEMS[newVal]?.name||newVal):'无',
+        type:'mod'
+      });
+    }
+  });
+
+  // 统计数据对比
+  const statFields=[
+    {key:'monstersKilled',label:'击杀妖兽'},
+    {key:'realmsExplored',label:'探索次数'},
+    {key:'pillsRefined',label:'炼丹次数'},
+    {key:'weaponsForged',label:'炼器次数'},
+    {key:'talismansDrawn',label:'画符次数'},
+    {key:'formationsSet',label:'布阵次数'},
+    {key:'daoComprehensions',label:'悟道次数'},
+    {key:'breakthroughs',label:'突破次数'},
+  ];
+  statFields.forEach(f=>{
+    const oldVal=originalData.stats?.[f.key]??0;
+    const newVal=player.stats?.[f.key]??0;
+    if(oldVal!==newVal){
+      changes.push({label:f.label,old:oldVal,new:newVal,type:'mod'});
+    }
+  });
+
+  // 物品对比
+  const oldInv=originalData.inventory||{};
+  const newInv=player.inventory||{};
+  const allItems=new Set([...Object.keys(oldInv),...Object.keys(newInv)]);
+  allItems.forEach(id=>{
+    const oldCount=oldInv[id]||0;
+    const newCount=newInv[id]||0;
+    if(oldCount!==newCount){
+      const itemName=ITEMS[id]?.name||id;
+      changes.push({
+        label:'物品:'+itemName,
+        old:oldCount>0?oldCount:'无',
+        new:newCount>0?newCount:'无',
+        type:newCount>oldCount?'add':'del'
+      });
+    }
+  });
+
+  // 功法对比
+  const oldTechs=originalData.techniques||[];
+  const newTechs=player.techniques||[];
+  const allTechs=new Set([...oldTechs,...newTechs]);
+  const allGf=getAllGongfa();
+  allTechs.forEach(id=>{
+    const had=oldTechs.includes(id);
+    const has=newTechs.includes(id);
+    if(had&&!has){
+      const gf=allGf.find(g=>g.id===id);
+      const name=gf?gf.name:(ITEMS[id]?.name||id);
+      changes.push({label:'功法:'+name,old:'已学',new:'已移除',type:'del'});
+    }else if(!had&&has){
+      const gf=allGf.find(g=>g.id===id);
+      const name=gf?gf.name:(ITEMS[id]?.name||id);
+      changes.push({label:'功法:'+name,old:'未学',new:'已学',type:'add'});
+    }
+  });
+
+  // 宗门任务对比
+  const oldTasks=originalData.sectTasksDone||[];
+  const newTasks=player.sectTasksDone||[];
+  if(JSON.stringify(oldTasks)!==JSON.stringify(newTasks)){
+    changes.push({label:'宗门任务',old:oldTasks.join(',')||'无',new:newTasks.join(',')||'无',type:'mod'});
+  }
+
+  if(changes.length===0){
+    return '<div class="diff-none">没有变更，工作区数据与存档一致</div>';
+  }
+
+  let html='<div style="margin-bottom:0.5rem;font-size:0.75rem;color:var(--text-dim)">共 '+changes.length+' 项变更：</div>';
+  html+=changes.map(c=>{
+    const typeLabel=c.type==='add'?'新增':c.type==='del'?'删除':'修改';
+    return `<div class="diff-row diff-${c.type}">
+      <span class="diff-key">${c.label}</span>
+      <span class="diff-old">${c.old}</span>
+      <span class="diff-arrow">→</span>
+      <span class="diff-new">${c.new}</span>
+      <span style="font-size:0.6rem;color:var(--text-dim);margin-left:auto">${typeLabel}</span>
+    </div>`;
+  }).join('');
+  return html;
+}
+
+// ==================== Toast ====================
+function showToast(msg,type,icon){
+  const container=document.getElementById('toastContainer');
+  const toast=document.createElement('div');
+  toast.className='toast '+(type||'info');
+  toast.innerHTML=`<i class="${icon||'ri-information-line'}"></i>${msg}`;
+  container.appendChild(toast);
+  setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateX(100%)';setTimeout(()=>toast.remove(),300);},2500);
+}
+
+// 离开页面前警告未保存的修改
+window.addEventListener('beforeunload',e=>{
+  if(isDirty()){
+    e.preventDefault();
+    e.returnValue='有未保存的修改，确定要离开吗？';
+  }
+});
+
+// 返回游戏：检查未保存修改
+function goBackToGame(){
+  if(isDirty()){
+    if(!confirm('有未保存的修改尚未写入存档，确定要返回游戏吗？\n（点击确定将放弃修改并返回）'))return false;
+  }
+  return true;
+}
+
+// 启动
+init();
+</script>
+</body>
+</html>
